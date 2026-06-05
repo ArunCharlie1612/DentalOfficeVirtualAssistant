@@ -1,0 +1,47 @@
+name: Deploy ChatBot to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ContosoDentistryChatBot/**'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: contoso-dentistry-chatbot
+  NODE_VERSION: '18.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        cd ContosoDentistryChatBot
+        npm install
+
+    - name: Create production build
+      run: |
+        cd ContosoDentistryChatBot
+        npm run build --if-present
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_CHATBOT }}
+        package: ./ContosoDentistryChatBot
+
+    - name: Deployment notification
+      if: success()
+      run: echo "ChatBot successfully deployed to Azure!"

@@ -1,0 +1,80 @@
+# Dependency directories
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+
+# Testing
+coverage/
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Build outputs
+dist/
+build/
+*.tgz
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Azure
+.azure/
+local.settings.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Secrets
+*.pem
+*.key
+secrets.json
+
+# Screenshots (keep for submission)
+!screenshots/
+screenshots/.gitkeep
