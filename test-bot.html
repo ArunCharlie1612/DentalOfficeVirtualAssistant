@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contoso Dentistry Bot Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .header p {
+            margin: 10px 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .status {
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        #webchat {
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .info {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .info h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        
+        .info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .info li {
+            margin: 8px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🦷 Contoso Dentistry Virtual Assistant</h1>
+        <p>Bot Framework Test Portal</p>
+        <div class="status">✓ Connected to http://localhost:3978</div>
+    </div>
+    
+    <div id="webchat" role="main"></div>
+    
+    <div class="info">
+        <h3>Test Commands</h3>
+        <ul>
+            <li><strong>Hello</strong> - Get a welcome message</li>
+            <li><strong>What appointments are available?</strong> - See available time slots</li>
+            <li><strong>Schedule an appointment</strong> - Book an appointment</li>
+            <li><strong>Do you accept insurance?</strong> - FAQ test</li>
+            <li><strong>What are your hours?</strong> - Office hours FAQ</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Simple chat interface for local bot testing
+        const userId = 'user-' + Math.random().toString(36).substring(7);
+        const conversationId = 'conv-' + Math.random().toString(36).substring(7);
+        let messageHistory = [];
+        
+        function createChatUI() {
+            const webchat = document.getElementById('webchat');
+            webchat.innerHTML = `
+                <div style="display: flex; flex-direction: column; height: 100%; background: #f5f5f5;">
+                    <div id="messages" style="flex: 1; overflow-y: auto; padding: 20px;">
+                        <!-- Messages will appear here -->
+                    </div>
+                    <div style="padding: 20px; background: white; border-top: 1px solid #ddd;">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="messageInput" placeholder="Type your message..." 
+                                   style="flex: 1; padding: 12px; border: 2px solid #667eea; border-radius: 25px; font-size: 14px;"
+                                   onkeypress="if(event.key==='Enter') sendMessage()">
+                            <button onclick="sendMessage()" 
+                                    style="padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Send initial greeting
+            setTimeout(() => {
+                sendGreeting();
+            }, 500);
+        }
+        
+        function addMessage(text, isUser) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                display: flex;
+                margin-bottom: 15px;
+                ${isUser ? 'justify-content: flex-end;' : 'justify-content: flex-start;'}
+            `;
+            
+            const bubble = document.createElement('div');
+            bubble.style.cssText = `
+                max-width: 70%;
+                padding: 12px 18px;
+                border-radius: 18px;
+                ${isUser ? 
+                    'background: #764ba2; color: white; border-bottom-right-radius: 4px;' : 
+                    'background: white; color: #333; border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'}
+                font-size: 14px;
+                line-height: 1.5;
+                white-space: pre-wrap;
+            `;
+            bubble.textContent = text;
+            
+            messageDiv.appendChild(bubble);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        async function sendGreeting() {
+            try {
+                const response = await fetch('http://localhost:3978/api/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'conversationUpdate',
+                        membersAdded: [{ id: userId, name: 'User' }],
+                        from: { id: userId, name: 'User' },
+                        channelId: 'webchat',
+                        conversation: { id: conversationId },
+                        recipient: { id: 'bot', name: 'Bot' }
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.activities) {
+                        data.activities.forEach(activity => {
+                            if (activity.text) {
+                                addMessage(activity.text, false);
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error sending greeting:', error);
+                addMessage('⚠️ Connected! Type a message to start chatting.', false);
+            }
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            // Display user message
+            addMessage(text, true);
+            input.value = '';
+            
+            try {
+                const response = await fetch('http://localhost:3978/api/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'message',
+                        text: text,
+                        from: { id: userId, name: 'User' },
+                        channelId: 'webchat',
+                        conversation: { id: conversationId },
+                        recipient: { id: 'bot', name: 'Bot' },
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    // Note: Bot Framework adapter doesn't return responses directly
+                    // In real scenario, you'd use DirectLine or similar
+                    // For this test, we'll show a simple acknowledgment
+                    setTimeout(() => {
+                        addMessage('✓ Message sent to bot. (For full responses, use Bot Framework Emulator)', false);
+                    }, 500);
+                } else {
+                    addMessage('⚠️ Error sending message. Make sure bot is running.', false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('⚠️ Could not connect to bot. Is it running on http://localhost:3978?', false);
+            }
+        }
+        
+        // Initialize chat UI
+        window.addEventListener('DOMContentLoaded', createChatUI);
+    </script>
+</body>
+</html>
